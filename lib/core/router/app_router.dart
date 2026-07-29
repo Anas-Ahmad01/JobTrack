@@ -3,12 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../presentation/viewmodels/auth_viewmodel.dart';
+import '../../presentation/views/shell_scaffold.dart';
 import '../../presentation/views/login_screen.dart';
 import '../../presentation/views/register_screen.dart';
 import '../../presentation/views/forgot_password_screen.dart';
 import '../../presentation/views/home_screen.dart';
+import '../../presentation/views/jobs_screen.dart';
+import '../../presentation/views/applications_screen.dart';
+import '../../presentation/views/saved_jobs_screens.dart';
+import '../../presentation/views/profile_screen.dart';
+
+
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -19,19 +27,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     redirect: (context, state) {
       final isLoggedIn = authState.valueOrNull != null;
-      final isAuthRoute = state.matchedLocation == '/login'|| state.matchedLocation == '/register' ||
+      final isAuthRoute = state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register' ||
           state.matchedLocation == '/forgot-password';
-      
+
       if (!isLoggedIn && !isAuthRoute) return '/login';
       if (isLoggedIn && isAuthRoute) return '/home';
 
-
+      return null;
     },
     routes: [
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (context , state) => const LoginScreen()
       ),
       GoRoute(
         path: '/register',
@@ -43,11 +52,45 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
-      GoRoute(
-        path: '/home',
-        name: 'home',
-        builder: (context, state) => const HomeScreen(),
+
+      ShellRoute(
+        navigatorKey: shellNavigatorKey,
+        builder: (context , state , child){
+          return ShellScaffold(
+            child: child, 
+            currentLocation: state.matchedLocation,
+          );
+        },
+        routes: [
+          GoRoute(
+            path: '/home',
+            name: 'home',
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/jobs',
+            name: 'jobs',
+            builder: (context, state) => const JobsScreen(),
+          ),
+          GoRoute(
+            path: '/applications',
+            name: 'applications',
+            builder: (context, state) => const ApplicationsScreen(),
+          ),
+          GoRoute(
+            path: '/saved',
+            name: 'saved',
+            builder: (context, state) => const SavedJobsScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
+
+        ]
       ),
-    ],
+    ]
   );
+
 });
