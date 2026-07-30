@@ -41,6 +41,27 @@ class JobCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Company initial avatar
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        job.companyName.isNotEmpty
+                            ? job.companyName[0].toUpperCase()
+                            : '?',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +72,7 @@ class JobCard extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           job.companyName,
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -66,12 +87,13 @@ class JobCard extends StatelessWidget {
                       onPressed: onSave,
                       icon: Icon(
                         isSaved ? Icons.bookmark : Icons.bookmark_border,
-                        color: isSaved ? theme.colorScheme.primary : null,
+                        color: isSaved ? theme.colorScheme.primary : theme.colorScheme.outline,
                       ),
+                      tooltip: 'Save job',
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   Icon(
@@ -80,10 +102,13 @@ class JobCard extends StatelessWidget {
                     color: theme.colorScheme.outline,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    job.location ?? 'Location not specified',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.outline,
+                  Expanded(
+                    child: Text(
+                      job.location ?? 'Location not specified',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   if (job.remote == true) ...[
@@ -111,11 +136,16 @@ class JobCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(
-                'Posted ${_getTimeAgo(job.createdAt)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Posted ${_getTimeAgo(job.createdAt)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/job.dart';
 import '../../data/repositories/jobs_repository.dart';
@@ -42,9 +43,16 @@ class JobsState {
 
 class JobsViewModel extends StateNotifier<JobsState> {
   final JobsRepository _repository;
+  Timer? _debounceTimer;
 
   JobsViewModel(this._repository) : super(const JobsState()) {
     loadJobs();
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> loadJobs() async {
@@ -57,17 +65,31 @@ class JobsViewModel extends StateNotifier<JobsState> {
     }
   }
 
-  Future<void> search(String query) async {
-    state = state.copyWith(isLoading: true, error: null, searchQuery: query);
-    try {
-      final jobs = await _repository.searchJobs(query);
-      state = state.copyWith(jobs: jobs, isLoading: false);
-    } catch (e) {
-      state = state.copyWith(error: e.toString(), isLoading: false);
+  /// Debounced search - waits 500ms after user stops typing
+  void search(String query) {
+    _debounceTimer?.cancel();
+    
+    if (query.trim().isEmpty) {
+      state = state.copyWith(searchQuery: '');
+      loadJobs();
+      return;
     }
+
+    state = state.copyWith(searchQuery: query);
+    
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      state = state.copyWith(isLoading: true, error: null);
+      try {
+        final jobs = await _repository.searchJobs(query.trim());
+        state = state.copyWith(jobs: jobs, isLoading: false);
+      } catch (e) {
+        state = state.copyWith(error: e.toString(), isLoading: false);
+      }
+    });
   }
 
   void clearSearch() {
+    _debounceTimer?.cancel();
     state = state.copyWith(searchQuery: '');
     loadJobs();
   }

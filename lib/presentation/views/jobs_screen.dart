@@ -17,6 +17,15 @@ class JobsScreen extends ConsumerStatefulWidget {
 class _JobsScreenState extends ConsumerState<JobsScreen> {
   final _searchController = TextEditingController();
 
+  final List<String> _quickFilters = [
+    'All',
+    'Flutter',
+    'Dart',
+    'Remote',
+    'Mobile',
+    'Software',
+  ];
+
   @override
   void dispose() {
     _searchController.dispose();
@@ -52,11 +61,61 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
                       )
                     : null,
               ),
-              onSubmitted: (value) {
+              onChanged: (value) {
                 ref.read(jobsViewModelProvider.notifier).search(value);
               },
             ),
           ),
+
+          // Quick filter chips
+          SizedBox(
+            height: 40,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _quickFilters.length,
+              itemBuilder: (context, index) {
+                final filter = _quickFilters[index];
+                final isSelected = jobsState.searchQuery.toLowerCase() == filter.toLowerCase() ||
+                    (filter == 'All' && jobsState.searchQuery.isEmpty);
+                
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(filter),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (filter == 'All') {
+                        _searchController.clear();
+                        ref.read(jobsViewModelProvider.notifier).clearSearch();
+                      } else {
+                        _searchController.text = filter;
+                        ref.read(jobsViewModelProvider.notifier).search(filter);
+                      }
+                    },
+                    showCheckmark: false,
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          // Results count
+          if (jobsState.searchQuery.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Results for "${jobsState.searchQuery}"',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                ),
+              ),
+            ),
 
           // Content
           Expanded(
@@ -80,10 +139,14 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
     }
 
     if (state.jobs.isEmpty) {
-      return const EmptyStateWidget(
-        title: 'No jobs found',
-        subtitle: 'Try a different search term',
-        icon: Icons.search_off,
+      return EmptyStateWidget(
+        title: state.searchQuery.isEmpty 
+            ? 'No jobs available' 
+            : 'No jobs found',
+        subtitle: state.searchQuery.isEmpty
+            ? 'Try again later'
+            : 'Try a different search term',
+        icon: state.searchQuery.isEmpty ? Icons.work_off : Icons.search_off,
       );
     }
 
@@ -96,17 +159,18 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
           return JobCard(
             job: job,
             onTap: () => context.push('/jobs/${job.id}'),
-            onSave: () {
-              // Will implement in Chapter 6
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Save feature '),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
+            onSave: () => _showSaveComingSoon(context),
           );
         },
+      ),
+    );
+  }
+
+  void _showSaveComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Save feature coming in Chapter 6'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
