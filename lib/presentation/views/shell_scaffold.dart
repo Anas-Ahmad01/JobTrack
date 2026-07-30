@@ -45,18 +45,13 @@ class ShellScaffold extends StatelessWidget {
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home), 
-            label: 'Home'
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search), 
-            label: 'Home'
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home), 
-            label: 'Home'
+            selectedIcon: Icon(Icons.search),
+            label: 'Jobs',
           ),
           NavigationDestination(
             icon: Icon(Icons.assignment_outlined),
@@ -73,9 +68,8 @@ class ShellScaffold extends StatelessWidget {
             selectedIcon: Icon(Icons.person),
             label: 'Profile',
           ),
-          
         ],
-        ),
+      ),
     );
   }
 }

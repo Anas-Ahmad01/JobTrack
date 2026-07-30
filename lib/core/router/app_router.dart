@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:jobtrack/presentation/views/job_details_screen.dart';
 import '../../presentation/viewmodels/auth_viewmodel.dart';
 import '../../presentation/views/shell_scaffold.dart';
 import '../../presentation/views/login_screen.dart';
@@ -71,6 +72,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/jobs',
             name: 'jobs',
             builder: (context, state) => const JobsScreen(),
+          ),
+          GoRoute(
+            path: '/jobs/:id',
+            name: 'job-details',
+            builder: (context, state) {
+              final jobId = state.pathParameters['id']!;
+              return JobDetailsScreen(jobId: jobId);
+            },
+
           ),
           GoRoute(
             path: '/applications',
