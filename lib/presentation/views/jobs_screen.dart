@@ -6,6 +6,7 @@ import '../common/widgets/loading_widget.dart';
 import '../common/widgets/error_widget.dart';
 import '../common/widgets/empty_state_widget.dart';
 import '../viewmodels/jobs_viewmodel.dart';
+import '../viewmodels/saved_jobs_viewmodel.dart';
 
 class JobsScreen extends ConsumerStatefulWidget {
   const JobsScreen({super.key});
@@ -35,6 +36,7 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
   @override
   Widget build(BuildContext context) {
     final jobsState = ref.watch(jobsViewModelProvider);
+    final savedJobsState = ref.watch(savedJobsViewModelProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -119,58 +121,55 @@ class _JobsScreenState extends ConsumerState<JobsScreen> {
 
           // Content
           Expanded(
-            child: _buildContent(jobsState),
+            child: _buildContent(jobsState, savedJobsState),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildContent(JobsState state) {
-    if (state.isLoading && state.jobs.isEmpty) {
+  Widget _buildContent(JobsState jobsState, SavedJobsState savedJobsState) {
+    if (jobsState.isLoading && jobsState.jobs.isEmpty) {
       return const LoadingWidget();
     }
 
-    if (state.error != null && state.jobs.isEmpty) {
+    if (jobsState.error != null && jobsState.jobs.isEmpty) {
       return ErrorMessageWidget(
-        message: state.error!,
+        message: jobsState.error!,
         onRetry: () => ref.read(jobsViewModelProvider.notifier).loadJobs(),
       );
     }
 
-    if (state.jobs.isEmpty) {
+    if (jobsState.jobs.isEmpty) {
       return EmptyStateWidget(
-        title: state.searchQuery.isEmpty 
+        title: jobsState.searchQuery.isEmpty 
             ? 'No jobs available' 
             : 'No jobs found',
-        subtitle: state.searchQuery.isEmpty
+        subtitle: jobsState.searchQuery.isEmpty
             ? 'Try again later'
             : 'Try a different search term',
-        icon: state.searchQuery.isEmpty ? Icons.work_off : Icons.search_off,
+        icon: jobsState.searchQuery.isEmpty ? Icons.work_off : Icons.search_off,
       );
     }
 
     return RefreshIndicator(
       onRefresh: () => ref.read(jobsViewModelProvider.notifier).loadJobs(),
       child: ListView.builder(
-        itemCount: state.jobs.length,
+        itemCount: jobsState.jobs.length,
         itemBuilder: (context, index) {
-          final job = state.jobs[index];
+          final job = jobsState.jobs[index];
+          final isSaved = savedJobsState.isJobSaved(job.id);
+          final isSaving = savedJobsState.savingJobIds.contains(job.id);
+          
           return JobCard(
             job: job,
+            isSaved: isSaved,
             onTap: () => context.push('/jobs/${job.id}'),
-            onSave: () => _showSaveComingSoon(context),
+            onSave: isSaving 
+                ? null 
+                : () => ref.read(savedJobsViewModelProvider.notifier).toggleSaveJob(job),
           );
         },
-      ),
-    );
-  }
-
-  void _showSaveComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Save feature coming in Chapter 6'),
-        behavior: SnackBarBehavior.floating,
       ),
     );
   }

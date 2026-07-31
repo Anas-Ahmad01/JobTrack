@@ -18,28 +18,49 @@ class JobsRepository {
   }
 
   Job _parseJob(Map<String, dynamic> json) {
+    // Handle both string and int IDs
+    final id = json['slug']?.toString() ?? 
+               json['id']?.toString() ?? 
+               '${json['title']}_${json['company_name']}'; // fallback ID
+
+    // Parse created_at - API returns Unix timestamp (int)
+    DateTime? createdAt;
+    final createdAtRaw = json['created_at'];
+    if (createdAtRaw != null) {
+      if (createdAtRaw is int) {
+        // Unix timestamp in seconds
+        createdAt = DateTime.fromMillisecondsSinceEpoch(createdAtRaw * 1000);
+      } else if (createdAtRaw is String) {
+        createdAt = DateTime.tryParse(createdAtRaw);
+      }
+    }
+
+    // Parse tags - API returns List<String>
+    List<String>? tags;
+    final tagsRaw = json['tags'];
+    if (tagsRaw is List) {
+      tags = tagsRaw.map((e) => e.toString()).toList();
+    }
+
+    // Parse remote - API returns boolean
+    bool? remote;
+    final remoteRaw = json['remote'];
+    if (remoteRaw is bool) {
+      remote = remoteRaw;
+    } else if (remoteRaw is String) {
+      remote = remoteRaw.toLowerCase() == 'true';
+    }
+
     return Job(
-      id: json['slug']?.toString() ?? json['id']?.toString() ?? '',
+      id: id,
       title: json['title']?.toString() ?? 'No Title',
       companyName: json['company_name']?.toString() ?? 'Unknown Company',
       location: json['location']?.toString(),
       description: json['description']?.toString(),
       url: json['url']?.toString(),
-      remote: json['remote'] == true || json['remote'] == 'true',
-      tags: (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
-      createdAt: _parseDate(json['created_at']),
+      remote: remote,
+      tags: tags,
+      createdAt: createdAt,
     );
-  }
-
-  DateTime? _parseDate(dynamic value) {
-    if (value == null) return null;
-    if (value is int) {
-      // Unix timestamp in seconds
-      return DateTime.fromMillisecondsSinceEpoch(value * 1000);
-    }
-    if (value is String) {
-      return DateTime.tryParse(value);
-    }
-    return null;
   }
 }

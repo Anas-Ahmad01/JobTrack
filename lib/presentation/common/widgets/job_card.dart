@@ -89,7 +89,7 @@ class JobCard extends StatelessWidget {
                         isSaved ? Icons.bookmark : Icons.bookmark_border,
                         color: isSaved ? theme.colorScheme.primary : theme.colorScheme.outline,
                       ),
-                      tooltip: 'Save job',
+                      tooltip: isSaved ? 'Remove from saved' : 'Save job',
                     ),
                 ],
               ),

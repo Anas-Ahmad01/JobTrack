@@ -9,8 +9,8 @@ class ArbeitnowService {
   Future<List<Map<String , dynamic>>> fetchJobs() async{
     try{
       final response = await _dio.get('/job-board-api');
-      final data = response.data as Map<String ,dynamic>;
-      final jobs = data['data'] as List<dynamic>? ?? [];
+      final data = response.data;
+      final jobs = data['data'];
       return jobs.cast<Map<String,dynamic>>();
     } on DioException catch (e){
       throw _handleError(e);
@@ -24,8 +24,9 @@ class ArbeitnowService {
         queryParameters: {'search': query},
       );
 
-      final data = response.data as Map<String, dynamic>;
-      final jobs = data['data'] as List<dynamic>? ?? [];
+      final data = response.data ;
+      final jobs = data['data'] ;
+      
       return jobs.cast<Map<String, dynamic>>();
     } on DioException catch (e) {
       throw _handleError(e);

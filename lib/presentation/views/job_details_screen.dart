@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:jobtrack/presentation/viewmodels/saved_jobs_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/models/job.dart';
 import '../common/widgets/status_badge.dart';
@@ -13,6 +14,9 @@ class JobDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final jobsState = ref.watch(jobsViewModelProvider);
+    final savedJobsState = ref.watch(savedJobsViewModelProvider);
+    
+    
     final job = jobsState.jobs.firstWhere(
       (j) => j.id == jobId,
       orElse: () => Job(
@@ -21,6 +25,8 @@ class JobDetailsScreen extends ConsumerWidget {
         companyName: '',
       ),
     );
+
+    final isSaved = savedJobsState.isJobSaved(job.id);
 
     if (job.id.isEmpty) {
       return Scaffold(
@@ -123,7 +129,20 @@ class JobDetailsScreen extends ConsumerWidget {
               ),
 
             const SizedBox(height: 24),
-
+            FilledButton.icon(
+              onPressed: () => _toggleSave(context, ref, job),
+              icon: Icon(isSaved ? Icons.bookmark : Icons.bookmark_border),
+              label: Text(isSaved ? 'Saved' : 'Save Job'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(double.infinity, 52),
+                backgroundColor: isSaved 
+                  ? Theme.of(context).colorScheme.primaryContainer 
+                  : Theme.of(context).colorScheme.surfaceContainerHighest,
+                foregroundColor: isSaved 
+                  ? Theme.of(context).colorScheme.primary 
+                  : Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
             // Tags
             if (job.tags != null && job.tags!.isNotEmpty) ...[
               Text(
@@ -225,6 +244,19 @@ class JobDetailsScreen extends ConsumerWidget {
       const SnackBar(
         content: Text('Save feature coming in Chapter 6'),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _toggleSave(BuildContext context, WidgetRef ref, Job job) {
+    ref.read(savedJobsViewModelProvider.notifier).toggleSaveJob(job);
+  
+    final isSaved = ref.read(savedJobsViewModelProvider).isJobSaved(job.id);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isSaved ? 'Job removed from saved' : 'Job saved!'),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
