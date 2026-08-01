@@ -13,6 +13,8 @@ import '../../presentation/views/jobs_screen.dart';
 import '../../presentation/views/applications_screen.dart';
 import '../../presentation/views/saved_jobs_screens.dart';
 import '../../presentation/views/profile_screen.dart';
+import '../../presentation/views/add_application_screen.dart';
+import '../../presentation/views/application_details_screen.dart';
 
 
 
@@ -96,6 +98,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/profile',
             name: 'profile',
             builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/applications/new',
+            name: 'add-application',
+            builder: (context, state) => const AddApplicationScreen(),
+          ),
+          GoRoute(
+            path: '/applications/:id',
+            name: 'application-details',
+            builder: (context, state) {
+              final appId = state.pathParameters['id']!;
+              return ApplicationDetailsScreen(applicationId: appId);
+            },
           ),
 
         ]
