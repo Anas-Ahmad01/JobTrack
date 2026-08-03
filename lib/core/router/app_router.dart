@@ -102,7 +102,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/applications/new',
             name: 'add-application',
-            builder: (context, state) => const AddApplicationScreen(),
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>?;
+              return AddApplicationScreen(prefillData: extra);
+            },
           ),
           GoRoute(
             path: '/applications/:id',

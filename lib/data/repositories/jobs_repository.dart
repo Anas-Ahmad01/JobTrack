@@ -1,5 +1,6 @@
 import '../models/job.dart';
 import '../services/arbeitnow_service.dart';
+import '../../core/utils/html_utils.dart';
 
 class JobsRepository {
   final ArbeitnowService _service;
@@ -56,7 +57,7 @@ class JobsRepository {
       title: json['title']?.toString() ?? 'No Title',
       companyName: json['company_name']?.toString() ?? 'Unknown Company',
       location: json['location']?.toString(),
-      description: json['description']?.toString(),
+      description: HtmlUtils.stripTags(json['description']?.toString()),
       url: json['url']?.toString(),
       remote: remote,
       tags: tags,

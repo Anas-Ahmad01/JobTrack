@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:jobtrack/presentation/viewmodels/saved_jobs_viewmodel.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../data/models/job.dart';
@@ -15,8 +16,7 @@ class JobDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final jobsState = ref.watch(jobsViewModelProvider);
     final savedJobsState = ref.watch(savedJobsViewModelProvider);
-    
-    
+
     final job = jobsState.jobs.firstWhere(
       (j) => j.id == jobId,
       orElse: () => Job(
@@ -50,7 +50,6 @@ class JobDetailsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with company info
             Row(
               children: [
                 Container(
@@ -96,8 +95,6 @@ class JobDetailsScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 20),
-
-            // Meta info cards
             Row(
               children: [
                 Expanded(
@@ -120,14 +117,12 @@ class JobDetailsScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-
             if (job.remote == true)
               const StatusBadge(
                 label: 'Remote Position',
                 backgroundColor: Color(0xFFDCfce7),
                 textColor: Color(0xFF166534),
               ),
-
             const SizedBox(height: 24),
             FilledButton.icon(
               onPressed: () => _toggleSave(context, ref, job),
@@ -135,15 +130,15 @@ class JobDetailsScreen extends ConsumerWidget {
               label: Text(isSaved ? 'Saved' : 'Save Job'),
               style: FilledButton.styleFrom(
                 minimumSize: const Size(double.infinity, 52),
-                backgroundColor: isSaved 
-                  ? Theme.of(context).colorScheme.primaryContainer 
-                  : Theme.of(context).colorScheme.surfaceContainerHighest,
-                foregroundColor: isSaved 
-                  ? Theme.of(context).colorScheme.primary 
-                  : Theme.of(context).colorScheme.onSurface,
+                backgroundColor: isSaved
+                    ? theme.colorScheme.primaryContainer
+                    : theme.colorScheme.surfaceContainerHighest,
+                foregroundColor: isSaved
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface,
               ),
             ),
-            // Tags
+            const SizedBox(height: 12),
             if (job.tags != null && job.tags!.isNotEmpty) ...[
               Text(
                 'Tags',
@@ -166,8 +161,6 @@ class JobDetailsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
             ],
-
-            // Description
             Text(
               'Description',
               style: theme.textTheme.titleMedium?.copyWith(
@@ -189,24 +182,13 @@ class JobDetailsScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 32),
-
-            // Action buttons
-            FilledButton.icon(
-              onPressed: () => _saveJob(context),
-              icon: const Icon(Icons.bookmark_border),
-              label: const Text('Save Job'),
-              style: FilledButton.styleFrom(
-                minimumSize: const Size(double.infinity, 52),
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-                foregroundColor: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: job.url != null ? () => _launchUrl(job.url!) : null,
+                    onPressed: job.url != null && job.url!.isNotEmpty
+                        ? () => _launchUrl(context, job.url!)
+                        : null,
                     icon: const Icon(Icons.open_in_new),
                     label: const Text('Apply Now'),
                     style: FilledButton.styleFrom(
@@ -239,18 +221,9 @@ class JobDetailsScreen extends ConsumerWidget {
     return '${date.day}/${date.month}/${date.year}';
   }
 
-  void _saveJob(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Save feature coming in Chapter 6'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   void _toggleSave(BuildContext context, WidgetRef ref, Job job) {
     ref.read(savedJobsViewModelProvider.notifier).toggleSaveJob(job);
-  
+
     final isSaved = ref.read(savedJobsViewModelProvider).isJobSaved(job.id);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -261,20 +234,40 @@ class JobDetailsScreen extends ConsumerWidget {
     );
   }
 
-  void _trackApplication(BuildContext context, Job job) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Track feature coming in Chapter 7'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+  Future<void> _launchUrl(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    try {
+      final launched = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open the link'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
+  void _trackApplication(BuildContext context, Job job) {
+    context.push('/applications/new', extra: {
+      'jobTitle': job.title,
+      'companyName': job.companyName,
+      'location': job.location,
+      'jobUrl': job.url,
+    });
   }
 }
 

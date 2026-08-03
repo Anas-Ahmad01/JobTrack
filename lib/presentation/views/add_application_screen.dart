@@ -10,7 +10,9 @@ import '../common/widgets/status_selector.dart';
 import '../viewmodels/applications_viewmodel.dart';
 
 class AddApplicationScreen extends ConsumerStatefulWidget {
-  const AddApplicationScreen({super.key});
+  final Map<String, dynamic>? prefillData;
+
+  const AddApplicationScreen({super.key, this.prefillData});
 
   @override
   ConsumerState<AddApplicationScreen> createState() => _AddApplicationScreenState();
@@ -23,9 +25,20 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
   final _locationController = TextEditingController();
   final _urlController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   ApplicationStatus _selectedStatus = ApplicationStatus.applied;
   DateTime? _appliedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.prefillData != null) {
+      _titleController.text = widget.prefillData!['jobTitle'] ?? '';
+      _companyController.text = widget.prefillData!['companyName'] ?? '';
+      _locationController.text = widget.prefillData!['location'] ?? '';
+      _urlController.text = widget.prefillData!['jobUrl'] ?? '';
+    }
+  }
 
   @override
   void dispose() {
@@ -115,7 +128,6 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // Applied date picker
                 InkWell(
                   onTap: () => _pickDate(context),
                   child: InputDecorator(
@@ -174,7 +186,7 @@ class _AddApplicationScreenState extends ConsumerState<AddApplicationScreen> {
     final now = DateTime.now();
     final application = JobApplication(
       id: const Uuid().v4(),
-      userId: '', // Will be set by repository
+      userId: '',
       jobTitle: _titleController.text.trim(),
       companyName: _companyController.text.trim(),
       location: _locationController.text.trim().isEmpty
